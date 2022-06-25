@@ -16,9 +16,7 @@ class ResNetYOLO(nn.Module):
 		self.conv1 = ConvBatchLeakyReLU(in_channels=3, out_channels=32, kernel_size=3, padding=1)
 		self.upsampleMode = "nearest"
 
-		model =  models.resnet34(pretrained=True)
-		# print(model(torch.randn(1, 3, 416, 416)).shape)
-		# print(model)
+		model =  models.resnet18(pretrained=True)
 		self.conv1 = nn.Sequential(
 			*list(model.children())[:5],
 		).requires_grad_(False)

@@ -7,6 +7,8 @@ from torch.utils import data
 from torchvision import transforms as T
 
 from .utils import iou_width_heght as iou
+
+
 def transformations(args):
 	transforms = T.Compose([
 		T.Resize((args['imageSize'], args['imageSize'])),
@@ -37,21 +39,24 @@ class YOLOv3Dataset(data.Dataset):
 		self.S = S
 		self.imgSize = 416
 		self.scaledAnchors = self.anchors / self.imgSize
-		# self.transforms = transforms
-		self.transforms = transformations(args)
+		self.transforms = transforms
+		# self.transforms = transformations(args)
 	def __len__(self):
 		return len(self.annotations)
 
 	def __getitem__(self, index):
-		bboxes = np.roll(np.loadtxt(fname=self.annotations[index][1], delimiter=" ", ndmin=2), 4, axis=1)
+		bboxes = np.roll(np.loadtxt(fname=self.annotations[index][1], delimiter=" ", ndmin=2), 4, axis=1).tolist()
 		bboxes = sorted(bboxes, key=lambda x: x[2] * x[3], reverse=True)
-		# image = np.array(Image.open(self.annotations[index][0]).convert("RGB"))
-		image = Image.open(self.annotations[index][0]).convert("RGB")
-		# if self.transforms:
-		# 	augmentations = self.transforms(image=image, bboxes=bboxes)
-		# 	image = augmentations["image"]
-		# 	bboxes = augmentations["bboxes"]
-		image = self.transforms(image)
+
+		# image = Image.open(self.annotations[index][0]).convert("RGB")
+		# image = self.transforms(image)
+
+		image = np.array(Image.open(self.annotations[index][0]).convert("RGB"))
+		if self.transforms:
+			augmentations = self.transforms(image=image, bboxes=bboxes)
+			image = augmentations["image"]
+			bboxes = augmentations["bboxes"]
+		
 		H, W = image.shape[ :2]
 
 		targets = [torch.zeros(self.numAnchorPerScale, S, S, 6) for i, S in enumerate(self.S)]
