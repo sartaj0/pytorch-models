@@ -1,12 +1,13 @@
 import numpy as np 
-import cv2, os , math
+import cv2, os , math, sys
 import random
+np.set_printoptions(threshold=sys.maxsize)
 def sigmoid(x):
   return 1 / (1 + np.exp(-x))
 
 colors = ((255, 0, 0), (0, 255, 0), (0, 0, 255))
-# net = cv2.dnn.readNetFromONNX(r"saved_models/model2.onnx")
-net = cv2.dnn.readNetFromONNX(r"E:\Desktop\model.onnx")
+net = cv2.dnn.readNetFromONNX(r"saved_models/model2.onnx")
+# net = cv2.dnn.readNetFromONNX(r"E:\Desktop\model.onnx")
 # image = cv2.imread(r"E:\dataset\detection\data\trainval\finalDataset\image_000000041.jpg")
 # image = cv2.imread(r"E:\dataset\SOTA\VOCdevkit\VOC2012\JPEGImages\2012_003960.jpg")
 # folder = r"E:\dataset\detection\data\trainval\finalDataset"
@@ -49,15 +50,15 @@ def process(image, net):
         for box in bboxes:
             x, y, w, h = box[1:5] * np.array([W, H, W, H])
             conf = box[0]
-            x1 = int(x - (w/2))
-            y1 = int(y - (h/2))
-            x2 = int(x + (w/2)) 
-            y2 = int(y + (h/2))
+            x1 = max(0, int(x - (w/2)))
+            y1 = max(0,int(y - (h/2)))
+            x2 = min(W, int(x + (w/2)))
+            y2 = min(H, int(y + (h/2)))
             boxes.append([x1, y1, int(w), int(h)])
             confidences.append(conf)
             classID = np.argmax(box[5:])
             classIDs.append(classID)
-    indices = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
+    indices = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.5)
     if len(indices) > 0:
         for i in indices.flatten():
             (x, y) = (boxes[i][0], boxes[i][1])

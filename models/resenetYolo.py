@@ -51,7 +51,7 @@ class ResNetYOLO(nn.Module):
 		)
 
 		self.dcc3 = nn.Sequential(
-			DoubleConvBatch(256, 128, 128),
+			DoubleConvBatch(256, 64, 128),
 			DoubleConvBatch(128, 64, 128),
 			ConvBatchLeakyReLU(in_channels=128, out_channels=128, kernel_size=1, stride=1, padding=0)
 		)

@@ -41,6 +41,8 @@ def main(args):
 	# model.load_state_dict(torch.load(pthFileName))
 	optimizer = optim.Adam(model.parameters(), lr=args['lr'])
 
+	scaler = torch.cuda.amp.GradScaler()
+
 	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	model.to(device)
 	criterion = YOLODetectionLoss()
@@ -53,10 +55,17 @@ def main(args):
 		trainLossIteration = []
 		with tqdm(trainLoader, unit=" batch", desc=f"Training {epoch}/{args['numEpochs']}", leave=False) as tepoch:
 			for i, inputs in enumerate(tepoch):
+				
+				with torch.cuda.amp.autocast():
+					loss = passInputs(args, model, inputs, criterion, device)
 				optimizer.zero_grad()
-				loss = passInputs(args, model, inputs, criterion, device)
-				loss.backward()
-				optimizer.step()
+
+				# loss.backward()
+				# optimizer.step()
+
+				scaler.scale(loss).backward()
+				scaler.step(optimizer)
+				scaler.update()
 
 				trainLossIteration.append(loss.item())
 				tepoch.set_postfix(loss=trainLossIteration[-1])
